@@ -8,7 +8,6 @@ WebApplication app = builder.Build();
 await app.StartAsync();
 
 BrowserWindow browserWindow = await Electron.WindowManager.CreateWindowAsync(app.Configuration["Url"]);
-browserWindow.SetTitle("ElectronWebsiteWrapper");
 browserWindow.SetMenuBarVisibility(false);
 browserWindow.Maximize();
 
