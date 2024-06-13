@@ -18,10 +18,9 @@ jobs:
     - name: Write release version
       if: ${{ env.IS_RELEASE == 'true' }}
       run: |
-        @echo off
-        set VERSION=%GITHUB_REF_NAME:~1%
-        echo Version: %VERSION%
-        echo VERSION=%VERSION% >> %GITHUB_ENV%
+        $VERSION = $env:GITHUB_REF_NAME.TrimStart('v')
+        Write-Host "Version: $VERSION"
+        $env:VERSION=$VERSION
     - uses: actions/checkout@v4
     - name: Set up .NET
       uses: actions/setup-dotnet@v4
