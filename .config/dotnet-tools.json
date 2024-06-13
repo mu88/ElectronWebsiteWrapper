@@ -8,6 +8,13 @@
         "electronize"
       ],
       "rollForward": false
+    },
+    "versionize": {
+      "version": "1.25.0",
+      "commands": [
+        "versionize"
+      ],
+      "rollForward": false
     }
   }
 }
