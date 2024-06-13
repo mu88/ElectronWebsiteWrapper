@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [versionize](https://github.com/versionize/versionize) for commit guidelines.
 
+<a name="1.1.0"></a>
+## [1.1.0](https://www.github.com/mu88/ElectronWebsiteWrapper/releases/tag/v1.1.0) (2024-06-13)
+
+### Features
+
+* use custom env var prefix ([eac2138](https://www.github.com/mu88/ElectronWebsiteWrapper/commit/eac21385e186eaa241a31f9da0603da2c79c6bfa))
+
 <a name="1.0.4"></a>
 ## [1.0.4](https://www.github.com/mu88/ElectronWebsiteWrapper/releases/tag/v1.0.4) (2024-06-13)
 
