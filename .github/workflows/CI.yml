@@ -15,6 +15,12 @@ jobs:
   ci_cd:
     runs-on: windows-latest
     steps:
+    - name: Write release version
+      if: ${{ env.IS_RELEASE == 'true' }}
+      run: |
+        VERSION=${GITHUB_REF_NAME#v}
+        echo Version: $VERSION
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
     - uses: actions/checkout@v4
     - name: Set up .NET
       uses: actions/setup-dotnet@v4
@@ -32,13 +38,11 @@ jobs:
     - name: Restore .NET tools
       run: dotnet tool restore
     - name: Build Windows app with ElectronNET
-      run: dotnet electronize build /target win
-    - name: Write release version
       if: ${{ env.IS_RELEASE == 'true' }}
-      run: |
-        VERSION=${GITHUB_REF_NAME#v}
-        echo Version: $VERSION
-        echo "VERSION=$VERSION" >> $GITHUB_ENV
+      run: dotnet electronize build /target win /Version ${{ env.VERSION }}
+    - name: Build Windows app with ElectronNET
+      if: ${{ env.IS_RELEASE == 'false' }}
+      run: dotnet electronize build /target win
     - name: Release
       uses: softprops/action-gh-release@v2
       if: ${{ env.IS_RELEASE == 'true' }}

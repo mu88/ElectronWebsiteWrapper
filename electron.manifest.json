@@ -10,6 +10,7 @@
   "build": {
     "appId": "com.ElectronWebsiteWrapper.app",
     "productName": "ElectronWebsiteWrapper",
+    "artifactName": "${productName}_${version}.${ext}",
     "copyright": "Copyright © 2024",
     "buildVersion": "1.0.0",
     "compression": "maximum",
