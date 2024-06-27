@@ -40,9 +40,18 @@ jobs:
       run: dotnet tool restore
     - name: Build Windows app with ElectronNET
       run: dotnet electronize build /target win /Version ${{ env.VERSION }}
+    - name: Create CHANGELOG
+      id: changelog
+      uses: Requarks/changelog-action@v1
+      if: ${{ env.IS_RELEASE == 'true' }}
+      with:
+        token: ${{ github.token }}
+        tag: ${{ env.VERSION }}
+        excludeTypes: build,docs,other,style,chore(deps)
     - name: Release
       uses: softprops/action-gh-release@v2
       if: ${{ env.IS_RELEASE == 'true' }}
       with:
         files: bin/Desktop/ElectronWebsiteWrapper*.exe # forward slashes MUST be used here, otherwise no artifacts will be found
         tag_name: ${{ env.VERSION }}
+        body: ${{ steps.changelog.outputs.changes }}
