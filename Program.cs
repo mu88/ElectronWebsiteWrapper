@@ -5,7 +5,7 @@ builder.WebHost.UseElectron(args);
 builder.Services.AddElectron();
 builder.Configuration.AddEnvironmentVariables(prefix: "ElectronWebsiteWrapper_");
 
-WebApplication app = builder.Build();
+await using var app = builder.Build();
 await app.StartAsync();
 
 BrowserWindow browserWindow = await Electron.WindowManager.CreateWindowAsync(app.Configuration["Url"]);
