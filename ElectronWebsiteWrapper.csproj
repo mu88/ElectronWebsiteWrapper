@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="ElectronNET.API" Version="23.6.2" />
+    <PackageReference Include="ElectronNET.API" />
   </ItemGroup>
   <ItemGroup>
     <Content Update="electron.manifest.json">
