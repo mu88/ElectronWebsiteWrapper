@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [versionize](https://github.com/versionize/versionize) for commit guidelines.
 
+<a name="1.2.0"></a>
+## [1.2.0](https://www.github.com/mu88/ElectronWebsiteWrapper/releases/tag/v1.2.0) (2024-11-19)
+
+### Features
+
+* set window title of app ([2a6f631](https://www.github.com/mu88/ElectronWebsiteWrapper/commit/2a6f63176587e685774d408a9b5a393a827c04b2))
+
 <a name="1.1.0"></a>
 ## [1.1.0](https://www.github.com/mu88/ElectronWebsiteWrapper/releases/tag/v1.1.0) (2024-06-13)
 

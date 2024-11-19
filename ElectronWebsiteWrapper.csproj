@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AspNetCoreAnalyzers"/>
+    <PackageReference Include="AspNetCoreAnalyzers" />
     <PackageReference Include="ElectronNET.API" />
     <PackageReference Include="IDisposableAnalyzers">
       <PrivateAssets>all</PrivateAssets>
