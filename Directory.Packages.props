@@ -10,4 +10,7 @@
     <PackageVersion Include="Meziantou.Analyzer" Version="2.0.182"/>
     <PackageVersion Include="StyleCop.Analyzers" Version="1.1.118"/>
   </ItemGroup>
+  <ItemGroup>
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-8g4q-xg66-9fp4"/> <!-- Since it's an internal app only, I consider this okay -->
+  </ItemGroup>
 </Project>
