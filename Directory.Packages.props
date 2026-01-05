@@ -7,7 +7,7 @@
     <PackageVersion Include="AspNetCoreAnalyzers" Version="0.3.0"/>
     <PackageVersion Include="ElectronNET.API" Version="23.6.2" />
     <PackageVersion Include="IDisposableAnalyzers" Version="4.0.8"/>
-    <PackageVersion Include="Meziantou.Analyzer" Version="2.0.260"/>
+    <PackageVersion Include="Meziantou.Analyzer" Version="2.0.264"/>
     <PackageVersion Include="StyleCop.Analyzers" Version="1.1.118"/>
   </ItemGroup>
   <ItemGroup>
