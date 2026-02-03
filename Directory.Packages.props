@@ -4,13 +4,11 @@
     <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="AspNetCoreAnalyzers" Version="0.3.0"/>
-    <PackageVersion Include="ElectronNET.API" Version="23.6.2" />
-    <PackageVersion Include="IDisposableAnalyzers" Version="4.0.8"/>
-    <PackageVersion Include="Meziantou.Analyzer" Version="2.0.267"/>
-    <PackageVersion Include="StyleCop.Analyzers" Version="1.1.118"/>
-  </ItemGroup>
-  <ItemGroup>
-    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-8g4q-xg66-9fp4"/> <!-- Since it's an internal app only, I consider this okay -->
+    <PackageVersion Include="AspNetCoreAnalyzers" Version="0.3.0" />
+    <PackageVersion Include="ElectronNET.Core" Version="0.4.0" />
+    <PackageVersion Include="ElectronNET.Core.AspNet" Version="0.4.0" />
+    <PackageVersion Include="IDisposableAnalyzers" Version="4.0.8" />
+    <PackageVersion Include="Meziantou.Analyzer" Version="2.0.295" />
+    <PackageVersion Include="StyleCop.Analyzers" Version="1.1.118" />
   </ItemGroup>
 </Project>

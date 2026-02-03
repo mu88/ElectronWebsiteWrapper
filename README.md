@@ -9,8 +9,7 @@ For example, when wrapping a vault's website (e.g. HashiCorp Vault) inside Elect
 Assuming the .NET SDK is installed, run the following script to build the app:
 
 ```
-dotnet tool restore
-dotnet electronize build /target win
+dotnet publish ElectronWebsiteWrapper.csproj -p:PublishProfile=win-x64
 ```
 
 This will restore all necessary dependencies and build the Electron.NET app.

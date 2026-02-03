@@ -4,10 +4,14 @@
     <Version>2.0.0</Version>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <Authors>mu88</Authors>
+    <Copyright>Copyright © $([System.DateTime]::Now.ToString('yyyy'))</Copyright>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AspNetCoreAnalyzers" />
-    <PackageReference Include="ElectronNET.API" />
+    <PackageReference Include="ElectronNET.Core" />
+    <PackageReference Include="ElectronNET.Core.AspNet" />
     <PackageReference Include="IDisposableAnalyzers">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -22,8 +26,10 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Update="electron.manifest.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <Compile Remove="publish\**"/>
+    <Content Remove="publish\**"/>
+    <EmbeddedResource Remove="publish\**"/>
+    <None Remove="publish\**"/>
+    <_ContentIncludedByDefault Remove="publish\**"/>
   </ItemGroup>
 </Project>

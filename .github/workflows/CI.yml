@@ -3,57 +3,105 @@ name: Combined CI / Release
 on:
   workflow_dispatch:
   push:
-    tags:
-      - '*'
     branches:
       - '**'
 
-env:
-  IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/') }}
-  VERSION: '0.0.1'
-
 jobs:
+  shared_ci_cd:
+    permissions:
+      contents: read
+
+    uses: mu88/github-actions/.github/workflows/ci-cd.yml@b677336e035082641f1b6d78c9223be9d08bef1b
+    with:
+      dotnet-cache-dependencies-via-lock-file: false # by default, NuGet lock files are used. However, ElectronNET seem to have issues with that
+      sonar-additional-params: ' ' # neither code coverage nor additional Sonar parameters are used in this project
+      sonar-key: mu88_ElectronWebsiteWrapper
+    secrets:
+      sonar-token: ${{ secrets.SONAR_TOKEN }}
+
   ci_cd:
     runs-on: windows-latest
+
+    needs: shared_ci_cd
+
+    permissions:
+      attestations: write
+      contents: read
+      id-token: write
+
     steps:
-    - name: Write release version
-      if: ${{ env.IS_RELEASE == 'true' }}
-      run: |
-        $VERSION = $env:GITHUB_REF_NAME.TrimStart('v')
-        Write-Host "Version: $VERSION"
-        Add-Content -Path $env:GITHUB_ENV -Value "VERSION=$VERSION"
-    - uses: actions/checkout@v6
-    - name: Set up .NET
-      uses: actions/setup-dotnet@v5
-      with:
-        dotnet-version: | 
-          6.0.x
-          9.0.x
-    - name: Set up Java
-      uses: actions/setup-java@v5
-      with:
-        distribution: 'microsoft'
-        java-version: '17'
-    - name: Restore dependencies
-      run: dotnet restore ElectronWebsiteWrapper.sln
-    - name: Build
-      run: dotnet build --no-restore ElectronWebsiteWrapper.sln
-    - name: Restore .NET tools
-      run: dotnet tool restore
-    - name: Build Windows app with ElectronNET
-      run: dotnet electronize build /target win /Version ${{ env.VERSION }}
-    - name: Create CHANGELOG
-      id: changelog
-      uses: Requarks/changelog-action@v1
-      if: ${{ env.IS_RELEASE == 'true' }}
-      with:
-        token: ${{ github.token }}
-        tag: ${{ env.VERSION }}
-        excludeTypes: build,docs,other,style,chore(deps)
-    - name: Release
-      uses: softprops/action-gh-release@v2
-      if: ${{ env.IS_RELEASE == 'true' }}
-      with:
-        files: bin/Desktop/ElectronWebsiteWrapper*.exe # forward slashes MUST be used here, otherwise no artifacts will be found
-        tag_name: ${{ env.VERSION }}
-        body: ${{ steps.changelog.outputs.changes }}
+      - name: Check out code
+        uses: actions/checkout@v6
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Restore .NET tools
+        run: dotnet tool restore
+
+      - name: Determine version (release or non-release)
+        id: determine_version
+        shell: pwsh
+        run: |
+          if ('${{ needs.shared_ci_cd.outputs.is_release }}' -eq 'true') {
+            Write-Host "Release version is already set to ${{ needs.shared_ci_cd.outputs.release_version }}"
+            Write-Output "version=${{ needs.shared_ci_cd.outputs.release_version }}" >> $env:GITHUB_OUTPUT
+          } else {
+            $devVersion = "0.0.1"
+            Write-Host "Setting release version to dev version $devVersion"
+            Write-Output "version=$devVersion" >> $env:GITHUB_OUTPUT
+          }
+
+      - name: Build Windows app with ElectronNET
+        run: dotnet publish ElectronWebsiteWrapper.csproj -p:PublishProfile=win-x64 -p:Version=${{ steps.determine_version.outputs.version }}
+
+      - name: Determine release notes
+        id: changelog
+        if: ${{ needs.shared_ci_cd.outputs.is_release == 'true' }}
+        run: |
+          dotnet tool restore
+          dotnet tool run versionize changelog -v ${{ needs.shared_ci_cd.outputs.release_version }} >> ${{ runner.temp }}/release_notes.md || true
+          release_notes=$(cat ${{ runner.temp }}/release_notes.md)
+          echo "Determined release notes:"
+          echo "$release_notes"
+          if [ -z "$release_notes" ]; then
+            echo "No release notes determined, something went wrong."
+            exit 1
+          fi
+          
+          # Use GitHub Actions multiline output syntax to safely pass release notes (they may contain newlines and lines starting with '*')
+          echo "changes<<EOF" >> $GITHUB_OUTPUT
+          cat ${{ runner.temp }}/release_notes.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v3
+        if: ${{ needs.shared_ci_cd.outputs.is_release == 'true' }}
+        with:
+          subject-path: ElectronWebsiteWrapper/publish/Release/net*/*/ElectronWebsiteWrapper_{{ steps.determine_version.outputs.version }}.exe
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          output-file: sbom.json
+          path: .
+
+      - name: Attest SBOM
+        uses: actions/attest-sbom@v3
+        if: ${{ needs.shared_ci_cd.outputs.is_release == 'true' }}
+        with:
+          sbom-path: sbom.json
+          subject-path: ElectronWebsiteWrapper/publish/Release/net*/*/ElectronWebsiteWrapper_${{ steps.determine_version.outputs.version }}.exe
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: ${{ needs.shared_ci_cd.outputs.is_release == 'true' }}
+        with:
+          files: |
+            sbom.json
+            ElectronWebsiteWrapper/publish/Release/net*/*/ElectronWebsiteWrapper_${{ steps.determine_version.outputs.version }}.exe
+          name: ${{ needs.shared_ci_cd.outputs.release_version }}
+          tag_name: ${{ needs.shared_ci_cd.outputs.release_version }}
+          body: ${{ steps.changelog.outputs.changes }}

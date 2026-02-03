@@ -2,17 +2,17 @@
   "version": 1,
   "isRoot": true,
   "tools": {
-    "electronnet.cli": {
-      "version": "23.6.2",
+    "versionize": {
+      "version": "2.5.0",
       "commands": [
-        "electronize"
+        "versionize"
       ],
       "rollForward": false
     },
-    "versionize": {
-      "version": "2.4.0",
+    "dotnet-sonarscanner": {
+      "version": "11.0.0",
       "commands": [
-        "versionize"
+        "dotnet-sonarscanner"
       ],
       "rollForward": false
     }
