@@ -1,0 +1,130 @@
+name: Combined CI / Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  shared_ci_cd:
+    permissions:
+      contents: read
+
+    uses: mu88/github-actions/.github/workflows/ci-cd.yml@b677336e035082641f1b6d78c9223be9d08bef1b
+    with:
+      dotnet-cache-dependencies-via-lock-file: false # by default, NuGet lock files are used. However, ElectronNET seem to have issues with that
+      sonar-additional-params: ' ' # neither code coverage nor additional Sonar parameters are used in this project
+      sonar-key: mu88_ElectronWebsiteWrapper
+    secrets:
+      sonar-token: ${{ secrets.SONAR_TOKEN }}
+
+  ci_cd:
+    runs-on: windows-latest
+
+    needs: shared_ci_cd
+
+    permissions:
+      attestations: write
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # otherwise Versionize cannot read the Git history and the pre-release version cannot be bumped
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Restore .NET tools
+        run: dotnet tool restore
+
+      - name: Determine release notes
+        id: changelog
+        if: ${{ needs.shared_ci_cd.outputs.is_release == 'true' }}
+        shell: pwsh
+        run: |
+          # Generate release notes (non-fatal) and save to runner temp
+          & dotnet tool run versionize changelog -v ${{ needs.shared_ci_cd.outputs.release_version }} > $env:RUNNER_TEMP\release_notes.md
+          $release_notes = Get-Content -Path $env:RUNNER_TEMP\release_notes.md -Raw
+          Write-Host "Determined release notes:"
+          Write-Host $release_notes
+
+          if ([string]::IsNullOrWhiteSpace($release_notes)) {
+            Write-Error "No release notes determined, something went wrong."
+            exit 1
+          }
+
+          # Use GitHub Actions multiline output syntax to safely pass release notes
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "changes<<EOF"
+          Get-Content -Path $env:RUNNER_TEMP\release_notes.md | ForEach-Object { Add-Content -Path $env:GITHUB_OUTPUT -Value $_ }
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "EOF"
+
+      - name: Bump pre-release version
+        id: bump_prerelease_version
+        if: ${{ needs.shared_ci_cd.outputs.is_release != 'true' }}
+        shell: pwsh
+        run: |
+          # Although no commit or tag is made, we still need to set the git user to avoid Versionize errors
+          git config --global user.name "John Doe"
+          git config --global user.email johndoe@example.com
+
+          dotnet tool run versionize `
+            --pre-release "alpha-${{ github.run_number }}-${{ github.run_attempt }}" `
+            --skip-commit `
+            --skip-tag `
+            --find-release-commit-via-message
+
+          [xml]$csproj = Get-Content -Path "ElectronWebsiteWrapper.csproj"
+          $version = $csproj.Project.PropertyGroup.Version
+          Write-Host "Read version $version from ElectronWebsiteWrapper.csproj"
+          Write-Output "pre_release_version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Determine version (release or non-release)
+        id: determine_version
+        shell: pwsh
+        run: |
+          if ('${{ needs.shared_ci_cd.outputs.is_release }}' -eq 'true') {
+            Write-Host "Release version is already set to ${{ needs.shared_ci_cd.outputs.release_version }}"
+            Write-Output "version=${{ needs.shared_ci_cd.outputs.release_version }}" >> $env:GITHUB_OUTPUT
+          } else {
+            Write-Host "Using pre-release version ${{ steps.bump_prerelease_version.outputs.pre_release_version }}"
+            Write-Output "version=${{ steps.bump_prerelease_version.outputs.pre_release_version }}" >> $env:GITHUB_OUTPUT
+          }
+
+      - name: Build Windows app with ElectronNET
+        run: dotnet publish ElectronWebsiteWrapper.csproj -p:PublishProfile=win-x64 -p:Version=${{ steps.determine_version.outputs.version }}
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v3
+        if: ${{ needs.shared_ci_cd.outputs.is_release == 'true' }}
+        with:
+          subject-path: publish\Release\net*\*\ElectronWebsiteWrapper_${{ steps.determine_version.outputs.version }}.exe
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          output-file: sbom.json
+          path: .
+
+      - name: Attest SBOM
+        uses: actions/attest-sbom@v3
+        if: ${{ needs.shared_ci_cd.outputs.is_release == 'true' }}
+        with:
+          sbom-path: sbom.json
+          subject-path: publish\Release\net*\*\ElectronWebsiteWrapper_${{ steps.determine_version.outputs.version }}.exe
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: ${{ needs.shared_ci_cd.outputs.is_release == 'true' }}
+        with:
+          files: |
+            sbom.json
+            publish/Release/net*/*/ElectronWebsiteWrapper_${{ steps.determine_version.outputs.version }}.exe
+          name: ${{ needs.shared_ci_cd.outputs.release_version }}
+          tag_name: ${{ needs.shared_ci_cd.outputs.release_version }}
+          body: ${{ steps.changelog.outputs.changes }}
