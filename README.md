@@ -1,28 +1,60 @@
 # ElectronWebsiteWrapper
 
-This repo contains an app based on [Electron.NET](https://github.com/ElectronNET/Electron.NET/). Its only purpose is to encapsulate any website into this dedicated app. This way, the executable `ElectronWebsiteWrapper.exe` can be excluded in clipboard tools(e.g. Ditto).
+[![Build](https://github.com/mu88/ElectronWebsiteWrapper/actions/workflows/CI_CD.yml/badge.svg)](https://github.com/mu88/ElectronWebsiteWrapper/actions/workflows/CI_CD.yml)
+[![Latest Release](https://img.shields.io/github/v/release/mu88/ElectronWebsiteWrapper)](https://github.com/mu88/ElectronWebsiteWrapper/releases/latest)
+[![License](https://img.shields.io/badge/license-Do%20No%20Harm-blue)](LICENSE.md)
 
-For example, when wrapping a vault's website (e.g. HashiCorp Vault) inside ElectronWebsiteWrapper and excluding the executable from the clipboard manager, secrets can no longer be revealed by the clipboard manager's history.
+An app based on [Electron.NET](https://github.com/ElectronNET/Electron.NET/) that wraps any website into a dedicated desktop executable. The primary motivation is to **exclude the executable from clipboard managers** (e.g. Ditto), so that secrets shown on the wrapped site (e.g. a HashiCorp Vault UI) are never captured in clipboard history.
 
-## Building the app for Windows
+## Download
 
-Assuming the .NET SDK is installed, run the following script to build the app:
+Pre-built Windows x64 binaries are available on the [**Releases page**](https://github.com/mu88/ElectronWebsiteWrapper/releases/latest). Each release ships a portable `.exe` — no installer required.
+
+## Prerequisites
+
+To **build** the application from source you need:
+
+- .NET SDK — see [`global.json`](global.json) for the required version
+- [Node.js](https://nodejs.org/) — required by Electron.NET at build time; see [Electron.NET system requirements](https://github.com/ElectronNET/Electron.NET/wiki/System-Requirements) for the minimum version
+
+To **run** a pre-built binary you only need a Windows x64 machine (no .NET runtime required — the app is self-contained).
+
+## Building for Windows
 
 ```
 dotnet publish ElectronWebsiteWrapper.csproj -p:PublishProfile=win-x64
 ```
 
-This will restore all necessary dependencies and build the Electron.NET app.
+This restores all dependencies (including Node/Electron) and produces a self-contained portable `.exe` under `publish\Release\`.
 
 ### Proxy issues
 
-At the time of writing, Electron.NET has several issues when run behind a corporate proxy. One can try to set the regular `HTTP_PROXY` and `HTTPS_PROXY` environment variables, but that didn't work for me.
-Configure the NPM proxy like `npm config set proxy http://my.company.com:3128` at least restored some dependencies, but failed for certain Electron dependencies.
-
-Currently, the only workaround is to not build on an environment where a proxy is needed.
+Electron.NET has known issues behind corporate proxies. Setting `HTTP_PROXY` / `HTTPS_PROXY` is not always sufficient. Configuring the NPM proxy via `npm config set proxy http://my.company.com:3128` helps partially but may still fail for certain Electron packages. The only reliable workaround is to build in a network environment without a proxy.
 
 ## Configuration
 
-Since it's a .NET app, the default [Configuration in .NET](https://learn.microsoft.com/en-us/dotnet/core/extensions/configuration) applies.
+The app uses the standard [.NET Configuration](https://learn.microsoft.com/dotnet/core/extensions/configuration) system. Configuration can be provided via `appsettings.json` **or** environment variables.
 
-The configuration parameter `Url` can be used to specify the website to wrap. The environment variable `ElectronWebsiteWrapper_Url` can be used, too.
+### `appsettings.json`
+
+```json
+{
+  "Url": "https://vault.example.com"
+}
+```
+
+| Key | Required | Description |
+|-----|----------|-------------|
+| `Url` | ✅ Yes | The website to wrap. Must be a valid absolute URI (e.g. `https://…`). The app fails fast with a descriptive error if this value is missing or invalid. |
+
+### Environment variable
+
+The prefix `ElectronWebsiteWrapper_` maps to configuration keys:
+
+```
+ElectronWebsiteWrapper_Url=https://vault.example.com
+```
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a full history of releases and changes.
