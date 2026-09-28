@@ -1,0 +1,9 @@
+# Excludes Electron.NET/electron-builder build tooling from the generated SBOM.
+# These paths contain build-time helper binaries and their own npm/Go dependency
+# trees (e.g. app-builder-bin, the Electron download cache), which are never
+# part of the shipped ElectronWebsiteWrapper_*.exe and therefore should not be
+# reported as runtime dependencies (see Dependabot alerts #1-#62).
+exclude:
+  - "**/.electron/**"
+  - "**/node_modules/app-builder-bin/**"
+  - "**/publish/package-lock.json"
