@@ -17,7 +17,7 @@ jobs:
     permissions:
       contents: read
 
-    uses: mu88/common/.github/workflows/ci-cd.yml@2363a377bb801a4dc3fb8729b20cbece3fa84c80 # main
+    uses: mu88/common/.github/workflows/ci-cd.yml@74c30dc7c3e8ea56e563531f9ffae7bb6e0ad88e # main
     with:
       dotnet-cache-dependencies-via-lock-file: false # by default, NuGet lock files are used. However, ElectronNET seem to have issues with that
       sonar-additional-params: ' ' # neither code coverage nor additional Sonar parameters are used in this project
@@ -48,7 +48,7 @@ jobs:
         run: dotnet publish ElectronWebsiteWrapper.csproj /p:PublishProfile=win-x64 /p:Version=${{ needs.shared_ci_cd.outputs.version }}
 
       - name: Generate SBOM and attest build provenance and SBOM
-        uses: mu88/common/.github/actions/attest-provenance-sbom@2363a377bb801a4dc3fb8729b20cbece3fa84c80 # main
+        uses: mu88/common/.github/actions/attest-provenance-sbom@74c30dc7c3e8ea56e563531f9ffae7bb6e0ad88e # main
         with:
           is-release: ${{ needs.shared_ci_cd.outputs.is_release }}
           sbom-config-file: .syft.yaml
