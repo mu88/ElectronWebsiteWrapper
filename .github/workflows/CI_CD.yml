@@ -17,7 +17,7 @@ jobs:
     permissions:
       contents: read
 
-    uses: mu88/common/.github/workflows/ci-cd.yml@e3c88ef296055806e2c3ebf54979a354203d2e42 # main
+    uses: mu88/common/.github/workflows/ci-cd.yml@4b0f537de7133b6d169a85d780e108d3cd5493bc # main
     with:
       dotnet-cache-dependencies-via-lock-file: false # by default, NuGet lock files are used. However, ElectronNET seem to have issues with that
       sonar-additional-params: ' ' # neither code coverage nor additional Sonar parameters are used in this project
